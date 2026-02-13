@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PASE UTI DIGITAL</title>
+    <title>UTI DIGITAL GESTION IAF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,35 +14,25 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, limit, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
         window.fb = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, limit, getDocs, deleteDoc };
     </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #333333; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #E0E0E0; border-radius: 10px; }
-        
-        .bg-primary { background-color: #B11478; }
-        .text-primary { color: #B11478; }
-        .border-primary { border-color: #B11478; }
-        .bg-light { background-color: #FCE4F1; }
-
-        input, select, textarea { 
-            font-size: 16px !important; 
-            border-radius: 0.75rem !important; 
-            outline: none; 
-            border: 1px solid #E0E0E0; 
-            color: #333333;
-        }
-        input:focus, select:focus, textarea:focus { 
-            border-color: #B11478; 
-            box-shadow: 0 0 0 3px rgba(177, 20, 120, 0.1);
-        }
-        
+        .bg-iaf-primary { background-color: #B11478; }
+        .text-iaf-primary { color: #B11478; }
+        .border-iaf-primary { border-color: #B11478; }
+        .bg-iaf-light { background-color: #FCE4F1; }
+        .text-iaf-dark { color: #333333; }
+        .border-iaf-gray { border-color: #E0E0E0; }
+        input, select, textarea { font-size: 16px !important; border-radius: 0.75rem !important; outline: none; border: 1px solid #E0E0E0; }
+        input:focus, select:focus, textarea:focus { border-color: #B11478; box-shadow: 0 0 0 3px rgba(177, 20, 120, 0.1); }
         #printable-content { display: none; }
-        .pdf-section-title { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #B11478; border-bottom: 1px solid #FCE4F1; margin-bottom: 4px; padding-bottom: 2px; }
-        .pdf-label { font-size: 8px; font-weight: 700; color: #666; text-transform: uppercase; }
+        .pdf-section-title { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #B11478; border-bottom: 1px solid #FCE4F1; margin-bottom: 4px; }
+        .pdf-label { font-size: 8px; font-weight: 700; color: #666; }
         .pdf-value { font-size: 9px; font-weight: 600; color: #333; }
     </style>
 </head>
@@ -51,7 +41,8 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback, useMemo } = React;
-        
+
+        // --- MOCK DATABASE (LOCAL) ---
         const MockDB = {
             data: (() => {
                 try {
@@ -78,13 +69,22 @@
             }
         };
 
+        // --- OPCIONES ---
         const BED_OPTIONS = ["Cama 1", "Cama 2", "Cama 3", "Cama 4", "Cama 5", "Cama 6", "Cama 7", "Cama 8", "Cama 9", "Cama 10", "Shock Room", "Aislamiento"];
         const PHP_OPTIONS = ["11ml/h", "21ml/h", "42ml/h", "63ml/h", "84ml/h", "105ml/h", "126ml/h"];
+        const ENTERAL_FLOW = ["21ml/h", "42ml/h", "63ml/h", "84ml/h"];
         const INFUSION_DRUGS = [
-            { group: "Vasoactivos", items: ["Noradrenalina 16mg", "Noradrenalina 32mg", "Nitroprusiato 50mg", "Nitroglicerina 50mg", "Vasopresina", "Dopamina", "Dobutamina", "Adrenalina"] },
+            { group: "Vasoactivos", items: ["Noradrenalina 16mg", "Noradrenalina 32mg", "Nitroprusiato 50mg", "Nitroglicerina 50mg", "Vasopresina", "Dopamina", "Dobutamina", "Adrenalina", "Milrinona"] },
             { group: "Sedoanalgesia", items: ["Midazolam", "Propofol", "Fentanilo", "Morfina", "Remifentanilo", "Atracurio"] },
-            { group: "Otros", items: ["Furosemida", "Bicarbonato", "KCl", "Insulina", "Gluconato de Calcio"] }
+            { group: "Otros", items: ["Furosemida 200mg", "Bicarbonato 1M", "Insulina", "KCl"] }
         ];
+        const ATB_LIST = ["Amikacina", "Ampicilina Sulbactam", "Cefepime", "Ceftriaxona", "Colistin", "Imipenem", "Meropenem", "Piper Tazo", "Vancomicina"];
+        const RESP_DEVICES = ["AA", "Cánula Nasal", "Máscara Simple", "Máscara Reservorio", "Alto Flujo", "VNI", "ARM"];
+        const ARM_MODES = ["VC", "PC", "PS", "CPAP"];
+        const DIET = ["NVO", "VO", "K108", "Gastrostomía", "NPT"];
+        const ISOLATION_TYPES = ["No", "Contacto", "Respiratorio", "Gotitas", "Protector"];
+        const VASCULAR_TYPES = ["AVC", "Arterial", "AVP", "PICC"];
+        const VASCULAR_SITES = ["Yugular Der", "Yugular Izq", "Femoral Der", "Femoral Izq", "Radial Der", "Radial Izq"];
 
         const getAutomaticShift = () => {
             const h = new Date().getHours();
@@ -100,42 +100,106 @@
                 wind: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>,
                 zap: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
                 shield: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A3.33 3.33 0 0018.377 2.866L12.04 1l-6.337 1.866a3.33 3.33 0 00-2.28 3.118 11.662 11.662 0 004.398 9.491 2.33 2.33 0 011.04 1.858V21h6.337v-3.667a2.33 2.33 0 011.04-1.858 11.662 11.662 0 004.398-9.491z" /></svg>,
-                cloud: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>,
-                cog: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-                home: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
-                download: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                micro: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>,
+                drop: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.022.547l-2.387.477a6 6 0 00-3.86-.517" /></svg>,
+                x: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
+                cloud: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>,
+                cog: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>,
+                check: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>,
+                download: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
+                home: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3" /></svg>,
+                history: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                back: <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             };
-            return <div className={className}>{icons[name] || icons.plus}</div>;
+            return <div className={className}>{icons[name] || name}</div>;
         };
+
+        const Section = ({ title, icon, color, children }) => (
+            <div className="bg-white rounded-[2.5rem] border border-iaf-gray shadow-sm overflow-hidden mb-6">
+                <div className={`px-6 py-3 border-b border-iaf-gray flex items-center gap-2 ${color} font-black uppercase text-[10px] tracking-widest`}>
+                    <Icon name={icon} className="w-4 h-4" /> {title}
+                </div>
+                <div className="p-6">{children}</div>
+            </div>
+        );
+
+        const FullShiftReport = ({ patients }) => (
+            <div className="p-8 bg-white text-iaf-dark">
+                <div className="text-center border-b-4 border-iaf-primary pb-4 mb-6">
+                    <h1 className="text-2xl font-black text-iaf-primary uppercase">UTI DIGITAL IAF</h1>
+                    <p className="text-xs font-bold text-gray-500">{new Date().toLocaleDateString()} - {getAutomaticShift()}</p>
+                </div>
+                <div className="space-y-4">
+                    {patients.map(p => (
+                        <div key={p.id} className="border border-gray-200 rounded-xl p-4 break-inside-avoid">
+                            <div className="flex justify-between font-black border-b mb-2">
+                                <span>{p.bed} - {p.name}</span>
+                                <span>HC: {p.hc}</span>
+                            </div>
+                            <p className="text-[10px]"><span className="font-bold">DX:</span> {p.diagnosisActive}</p>
+                            <p className="text-[10px]"><span className="font-bold">RESP:</span> {p.respiratory.type} ({p.respiratory.fio2}%)</p>
+                            <p className="text-[10px]"><span className="font-bold">PHP:</span> {p.medication.php}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const BedGrid = ({ patients, onSelectBed, onCreateBed }) => (
+            <div className="p-8 pb-32">
+                <h2 className="text-2xl font-black text-iaf-primary uppercase mb-6 flex items-center gap-2">
+                    <Icon name="home" className="w-6 h-6" /> Panel de Camas
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {BED_OPTIONS.map(bed => {
+                        const patient = patients.find(p => p.bed === bed);
+                        return (
+                            <button 
+                                key={bed}
+                                onClick={() => patient ? onSelectBed(patient.id) : onCreateBed(bed)}
+                                className={`p-4 rounded-[1.5rem] border-2 h-32 flex flex-col justify-between transition-all active:scale-95 shadow-sm text-left ${patient ? 'bg-iaf-primary border-iaf-primary text-white' : 'bg-white border-gray-200 text-gray-300'}`}
+                            >
+                                <span className="text-xs font-black uppercase tracking-widest">{bed}</span>
+                                <p className="text-sm font-black leading-tight uppercase line-clamp-2">{patient ? (patient.name || "Sin Nombre") : "Vacia"}</p>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
 
         const App = () => {
             const [patients, setPatients] = useState([]);
-            const [currentView, setCurrentView] = useState('home'); 
             const [selectedId, setSelectedId] = useState(null);
-            const [appMode, setAppMode] = useState('loading');
+            const [isEditing, setIsEditing] = useState(false);
+            const [currentView, setCurrentView] = useState('home');
+            const [formState, setFormState] = useState(null);
+            const [appMode, setAppMode] = useState('offline'); // 'loading', 'offline', 'firebase'
             const [fbServices, setFbServices] = useState(null);
-            const [manualConfig, setManualConfig] = useState(localStorage.getItem('uti_fb_config') || '');
             const [showConfig, setShowConfig] = useState(false);
+            const [manualConfig, setManualConfig] = useState('');
 
-            // Inicializar Firebase
+            // --- INICIALIZACIÓN ---
             useEffect(() => {
-                const initFirebase = async () => {
-                    if (window.fb && manualConfig) {
+                const savedConfig = localStorage.getItem('uti_firebase_config');
+                if (savedConfig) setManualConfig(savedConfig);
+
+                const initSystem = async () => {
+                    if (window.fb && savedConfig) {
                         try {
-                            const config = JSON.parse(manualConfig);
-                            const { initializeApp, getAuth, signInAnonymously, getFirestore, collection, onSnapshot } = window.fb;
-                            const app = initializeApp(config);
-                            const auth = getAuth(app);
-                            const db = getFirestore(app);
+                            const config = JSON.parse(savedConfig);
+                            const app = window.fb.initializeApp(config, "cloudApp");
+                            const db = window.fb.getFirestore(app);
+                            const auth = window.fb.getAuth(app);
+                            await window.fb.signInAnonymously(auth);
                             
-                            await signInAnonymously(auth);
                             setFbServices({ ...window.fb, db });
                             setAppMode('firebase');
 
-                            const q = collection(db, 'patients');
-                            onSnapshot(q, (snap) => {
+                            const q = window.fb.collection(db, 'uti_patients');
+                            window.fb.onSnapshot(q, (snap) => {
                                 const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                                setPatients(data.sort((a,b) => a.bed.localeCompare(b.bed, undefined, {numeric: true})));
+                                setPatients(data);
                             });
                         } catch (e) {
                             console.error("Error Firebase:", e);
@@ -143,98 +207,135 @@
                         }
                     } else {
                         setAppMode('offline');
+                        MockDB.subscribe(setPatients);
                     }
                 };
-                initFirebase();
-            }, [manualConfig]);
+                initSystem();
+            }, []);
 
-            useEffect(() => {
-                if (appMode === 'offline') {
-                    return MockDB.subscribe(data => {
-                        setPatients(data.sort((a,b) => a.bed.localeCompare(b.bed, undefined, {numeric: true})));
-                    });
+            // --- ACCIONES ---
+            const saveData = async (id, data) => {
+                if (appMode === 'firebase' && fbServices) {
+                    await fbServices.setDoc(fbServices.doc(fbServices.db, 'uti_patients', id), data, { merge: true });
+                } else {
+                    MockDB.update(id, data);
                 }
-            }, [appMode]);
+            };
 
             const handleCreate = async (bed) => {
                 const id = Date.now().toString();
-                const newP = { bed, name: "", respiratory: { type: "AA" }, medication: { php: "21ml/h", infusions: [] }, notes: "" };
-                if (appMode === 'firebase') {
-                    await fbServices.setDoc(fbServices.doc(fbServices.db, 'patients', id), newP);
-                } else {
-                    MockDB.update(id, newP);
-                }
+                const newP = {
+                    bed, name: "", hc: "", admissionDate: new Date().toISOString().split('T')[0],
+                    diagnosisActive: "", diagnosisBase: "", notes: "",
+                    respiratory: { type: "AA", fio2: "21" },
+                    medication: { php: "21ml/h", infusions: [] },
+                    isolation: { type: "No" }, elimination: { diuresisMethod: "Sonda Vesical" }
+                };
+                await saveData(id, newP);
                 setSelectedId(id);
+                setFormState({ id, ...newP });
                 setCurrentView('detail');
+                setIsEditing(true);
             };
 
-            const saveConfig = () => {
-                localStorage.setItem('uti_fb_config', manualConfig);
-                window.location.reload();
+            const handleDelete = async (id) => {
+                if (confirm("¿Confirmar Alta de Paciente?")) {
+                    if (appMode === 'firebase' && fbServices) {
+                        await fbServices.deleteDoc(fbServices.doc(fbServices.db, 'uti_patients', id));
+                    } else {
+                        MockDB.delete(id);
+                    }
+                    setCurrentView('home');
+                }
             };
+
+            const updateForm = (updates) => {
+                const newState = { ...formState, ...updates };
+                setFormState(newState);
+                saveData(formState.id, updates);
+            };
+
+            const handleExport = async () => {
+                const element = document.getElementById('printable-content');
+                element.style.display = 'block';
+                await html2pdf().from(element).save(`IAF_UTI_${new Date().toLocaleDateString()}.pdf`);
+                element.style.display = 'none';
+            };
+
+            if (appMode === 'loading') return <div className="h-screen flex items-center justify-center font-bold">Iniciando...</div>;
 
             return (
-                <div className="flex h-screen bg-[#f8fafc]">
-                    <aside className="w-20 bg-primary text-white flex flex-col items-center py-6 shadow-xl">
-                        <div className="mb-10 font-black text-xl">UTI</div>
-                        <button onClick={() => setCurrentView('home')} className={`p-4 rounded-2xl mb-4 ${currentView==='home'?'bg-white text-primary':'text-white/70'}`}><Icon name="home" /></button>
-                        <button onClick={() => setShowConfig(true)} className={`p-4 rounded-2xl mt-auto ${appMode==='firebase'?'text-green-300':'text-white/40'}`}><Icon name="cloud" /></button>
+                <div className="flex h-screen overflow-hidden">
+                    <aside className="w-20 bg-iaf-primary text-white flex flex-col items-center py-6 gap-6">
+                        <button onClick={() => setCurrentView('home')} className={`p-3 rounded-2xl ${currentView === 'home' ? 'bg-white text-iaf-primary' : ''}`}><Icon name="home" /></button>
+                        <button onClick={() => setShowConfig(true)} className={`p-3 rounded-2xl ${appMode === 'firebase' ? 'text-green-300' : 'opacity-50'}`}><Icon name="cloud" /></button>
+                        <button onClick={handleExport} className="p-3 rounded-2xl hover:bg-white/10"><Icon name="download" /></button>
                     </aside>
 
-                    <main className="flex-1 overflow-y-auto p-8">
+                    <main className="flex-1 overflow-y-auto bg-slate-50">
                         {currentView === 'home' ? (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {BED_OPTIONS.map(bed => {
-                                    const p = patients.find(x => x.bed === bed);
-                                    return (
-                                        <button key={bed} onClick={() => p ? (setSelectedId(p.id), setCurrentView('detail')) : handleCreate(bed)}
-                                            className={`h-32 p-4 rounded-3xl border-2 text-left flex flex-col justify-between transition-all ${p?'bg-primary border-primary text-white shadow-lg':'bg-white border-gray-100 text-gray-300'}`}>
-                                            <span className="text-[10px] font-black uppercase">{bed}</span>
-                                            <span className="font-bold uppercase truncate">{p ? p.name || "Ocupada" : "+ Vacía"}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <BedGrid patients={patients} onSelectBed={(id) => { setSelectedId(id); setFormState(patients.find(p=>p.id===id)); setCurrentView('detail'); setIsEditing(false); }} onCreateBed={handleCreate} />
                         ) : (
-                            <div className="max-w-2xl mx-auto bg-white p-8 rounded-[2rem] shadow-sm border">
-                                <button onClick={() => setCurrentView('home')} className="text-primary font-bold text-xs mb-4 uppercase">← Volver</button>
-                                <h2 className="text-3xl font-black text-primary mb-6 uppercase">Detalle del Pase</h2>
-                                <p className="text-gray-400 italic">Aquí podés editar la información del paciente...</p>
-                                {/* Formulario abreviado para ejemplo */}
-                                <div className="mt-6 space-y-4">
-                                    <input className="w-full p-4 bg-gray-50 border-none" placeholder="Nombre del Paciente" 
-                                        value={patients.find(x=>x.id===selectedId)?.name || ''} 
-                                        onChange={(e) => {
-                                            const id = selectedId;
-                                            const val = e.target.value;
-                                            if(appMode==='firebase') fbServices.setDoc(fbServices.doc(fbServices.db, 'patients', id), {name: val}, {merge:true});
-                                            else MockDB.update(id, {name: val});
-                                        }} />
-                                    <textarea className="w-full p-4 bg-gray-50 border-none h-32" placeholder="Notas y pendientes..."
-                                        value={patients.find(x=>x.id===selectedId)?.notes || ''}
-                                        onChange={(e) => {
-                                            const id = selectedId;
-                                            const val = e.target.value;
-                                            if(appMode==='firebase') fbServices.setDoc(fbServices.doc(fbServices.db, 'patients', id), {notes: val}, {merge:true});
-                                            else MockDB.update(id, {notes: val});
-                                        }} />
-                                </div>
+                            <div className="max-w-4xl mx-auto p-8">
+                                <header className="flex justify-between items-center mb-8">
+                                    <button onClick={() => setCurrentView('home')} className="flex items-center gap-2 font-bold text-gray-500"><Icon name="back" /> Volver</button>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleDelete(formState.id)} className="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-bold">ALTA</button>
+                                        <button onClick={() => setIsEditing(!isEditing)} className="bg-iaf-primary text-white px-6 py-2 rounded-xl font-bold">{isEditing ? "LISTO" : "EDITAR"}</button>
+                                    </div>
+                                </header>
+
+                                {isEditing ? (
+                                    <div className="space-y-6 pb-32">
+                                        <Section title="Identificación" icon="shield" color="text-iaf-primary bg-iaf-light">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <input placeholder="Nombre" value={formState.name} onChange={e => updateForm({name: e.target.value})} className="p-3 border"/>
+                                                <input placeholder="HC" value={formState.hc} onChange={e => updateForm({hc: e.target.value})} className="p-3 border"/>
+                                            </div>
+                                        </Section>
+                                        <Section title="Respiratorio" icon="wind" color="text-cyan-600 bg-cyan-50">
+                                            <select value={formState.respiratory.type} onChange={e => updateForm({respiratory: {...formState.respiratory, type: e.target.value}})} className="w-full p-3 border">
+                                                {RESP_DEVICES.map(d => <option key={d} value={d}>{d}</option>)}
+                                            </select>
+                                        </Section>
+                                        <Section title="Pendientes" icon="plus" color="text-gray-600 bg-gray-50">
+                                            <textarea value={formState.notes} onChange={e => updateForm({notes: e.target.value})} className="w-full p-4 h-32 border" placeholder="Notas..."/>
+                                        </Section>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white p-8 rounded-[3rem] shadow-sm border space-y-6">
+                                        <h1 className="text-3xl font-black text-iaf-primary uppercase">{formState.bed} - {formState.name || "Paciente"}</h1>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="p-4 bg-iaf-light rounded-2xl"><p className="text-xs font-bold text-iaf-primary">Diagnóstico</p><p className="font-bold">{formState.diagnosisActive || "Sin definir"}</p></div>
+                                            <div className="p-4 bg-cyan-50 rounded-2xl"><p className="text-xs font-bold text-cyan-600">Respiratorio</p><p className="font-bold">{formState.respiratory.type}</p></div>
+                                        </div>
+                                        <div className="p-6 bg-slate-50 rounded-2xl border-l-4 border-iaf-primary"><p className="text-xs font-bold text-gray-400 mb-2">NOTAS</p><p className="italic">{formState.notes || "No hay notas"}</p></div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </main>
 
+                    {/* Modal Configuración */}
                     {showConfig && (
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur flex items-center justify-center p-4 z-50">
-                            <div className="bg-white p-8 rounded-3xl max-w-md w-full">
-                                <h3 className="text-primary font-black mb-4">CONECTAR A LA NUBE</h3>
-                                <textarea className="w-full h-48 p-4 text-xs font-mono border" placeholder='Pegá acá las llaves { ... }' value={manualConfig} onChange={e => setManualConfig(e.target.value)} />
-                                <div className="flex gap-2 mt-4">
-                                    <button onClick={() => setShowConfig(false)} className="flex-1 p-3 text-gray-400 font-bold">Cancelar</button>
-                                    <button onClick={saveConfig} className="flex-1 p-3 bg-primary text-white rounded-xl font-bold">CONECTAR</button>
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                            <div className="bg-white p-6 rounded-3xl max-w-md w-full">
+                                <h3 className="font-black text-iaf-primary mb-4">CONFIGURACIÓN NUBE</h3>
+                                <textarea 
+                                    className="w-full h-40 font-mono text-xs p-3 border mb-4" 
+                                    placeholder='Pega aquí el JSON de Firebase...'
+                                    value={manualConfig}
+                                    onChange={e => setManualConfig(e.target.value)}
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <button onClick={() => setShowConfig(false)} className="px-4 py-2 font-bold text-gray-400">Cerrar</button>
+                                    <button onClick={() => { localStorage.setItem('uti_firebase_config', manualConfig); location.reload(); }} className="bg-iaf-primary text-white px-4 py-2 rounded-xl font-bold">Conectar</button>
                                 </div>
                             </div>
                         </div>
                     )}
+
+                    <div id="printable-content"><FullShiftReport patients={patients}/></div>
                 </div>
             );
         };
